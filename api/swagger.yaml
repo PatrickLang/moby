@@ -695,6 +695,13 @@ definitions:
           Runtime:
             type: "string"
             description: "Runtime to use with this container."
+          Platform:
+            type: "string"
+            description: "Platform for the container. Default matches node OS.Platform"
+            enum:
+              - "default"
+              - "linux"
+              - "windows"
           # Applicable to Windows
           ConsoleSize:
             type: "array"
@@ -706,12 +713,11 @@ definitions:
               minimum: 0
           Isolation:
             type: "string"
-            description: "Isolation technology of the container. (Windows only)"
+            description: "Isolation technology of the container. (hyperv applicable to Windows nodes only)"
             enum:
               - "default"
               - "process"
               - "hyperv"
-
   Config:
     description: "Configuration for a container that is portable between hosts"
     type: "object"
@@ -1695,6 +1701,16 @@ definitions:
                 type: "string"
               OS:
                 type: "string"
+          PlatformCapability:
+            description: "Container platforms (linux|windows) this node can run"
+            type: "array"
+            items:
+              type: "string"
+          IsolationCapability:
+            description: "Isolation modes this node can run (process|hyperv)"
+            type: "array"
+            items:
+              type: "string"
           Resources:
             type: "object"
             properties:
@@ -1741,6 +1757,8 @@ definitions:
         Platform:
           Architecture: "x86_64"
           OS: "linux"
+        PlatformCapability:
+         - "linux"
         Resources:
           NanoCPUs: 4000000000
           MemoryBytes: 8272408576
@@ -2616,6 +2634,9 @@ definitions:
         ImageID:
           description: "The ID of the image that this container was created from"
           type: "string"
+        Platform:
+          description: "The platform (linux | windows) this container is running"
+          type: "string"
         Command:
           description: "Command to run when starting the container"
           type: "string"
@@ -3021,6 +3042,7 @@ paths:
                 CgroupParent: ""
                 VolumeDriver: ""
                 ShmSize: 67108864
+                Platform: linux
               NetworkingConfig:
                 EndpointsConfig:
                   isolated_nw:
@@ -4682,6 +4704,14 @@ paths:
           in: "query"
           description: "Microseconds of CPU time that the container can get in a CPU period."
           type: "integer"
+        - name: "platform"
+          in: "query"
+          description: "Platform to use for the entire build context (linux | windows)"
+          type: "string"
+        - name: "isolation"
+          in: "query"
+          description: "Isolation (default | process | hyperv) to use for the entire build context"
+          type: "string"
         - name: "buildargs"
           in: "query"
           description: "JSON map of string pairs for build-time variables. Users pass these values at build-time. Docker uses the buildargs as the environment context for commands run via the `Dockerfile` RUN instruction, or for variable expansion in other `Dockerfile` instructions. This is not meant for passing secret values. [Read more about the buildargs instruction.](https://docs.docker.com/engine/reference/builder/#arg)"
@@ -4782,6 +4812,10 @@ paths:
         - name: "tag"
           in: "query"
           description: "Tag or digest. If empty when pulling an image, this causes all tags for the given image to be pulled."
+          type: "string"
+        - name: "platform"
+          in: "query"
+          description: "Platform (linux | windows) to pull if a multi-arch image will be pulled, or platform to use with fromSrc if different from the daemon platform.OS"
           type: "string"
         - name: "inputImage"
           in: "body"
